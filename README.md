@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://skillicons.dev/icons?i=nestjs,postgres,docker,prisma,ts,nodejs" />
+</div>
+
 
 # NestJS + JWT + Prisma API Template
 
@@ -74,6 +78,3 @@ npm run start:dev
 * Validação de credenciais incorretas (`BadRequestException`).
 * Salt de 8 bytes e hash de 32 bytes aplicados nativamente antes da persistência no banco.
 
-```
-
-```
