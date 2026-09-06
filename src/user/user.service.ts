@@ -3,14 +3,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service'; 
-import { User, Prisma } from '@generated/prisma/index.js'; 
+import { PrismaService } from '../prisma/prisma.service';
+import { User, Prisma } from '@generated/prisma/index.js';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   throwNotFound(): never {
     throw new NotFoundException('Usuário não encontrado');
@@ -25,7 +25,7 @@ export class UserService {
       throw new ConflictException('Email já cadastrado');
     }
 
-    const hashedPassword = createUserDto.password; 
+    const hashedPassword = createUserDto.password;
 
     return this.prisma.user.create({
       data: {
@@ -45,13 +45,19 @@ export class UserService {
     return user;
   }
 
+  async buscarUserPorEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return null;
+    return user;
+  }
+
   async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     await this.buscarUser(id);
 
     const data: Prisma.UserUpdateInput = {};
     if (updateUserDto.email) data.email = updateUserDto.email;
     if (updateUserDto.password) {
-       data.password = updateUserDto.password;
+      data.password = updateUserDto.password;
     }
 
     return this.prisma.user.update({

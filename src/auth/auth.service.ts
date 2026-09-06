@@ -1,4 +1,39 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { User } from '@prisma/client';
+import { UserService } from 'src/user/user.service';
+import {randomBytes, scrypt as _scrypt} from 'crypto';
+import { promisify } from 'util';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+
+const scrypt = promisify(_scrypt);
 
 @Injectable()
-export class AuthService {}
+export class AuthService {
+    constructor(
+        private readonly userService: UserService
+        
+    ) {}
+    async signUp(email: string, password: string): Promise<string> {
+        
+        const existingUser: User | null = await this.userService.buscarUserPorEmail(email);
+
+        if (existingUser) {
+            throw new ConflictException('Email ja é esta em uso');
+        }
+
+        const salt: string = randomBytes(8).toString('hex');
+        const hash: Buffer = await scrypt(password, salt, 32) as Buffer;
+        const hashedPassword: string = `${salt}.${hash.toString('hex')}`;
+
+        const newUser: CreateUserDto ={
+            email: email,
+            password: hashedPassword,
+        }
+
+        await this.userService.createUser(newUser);
+
+
+
+        return 'Usuario criado com sucesso';
+    }
+}
