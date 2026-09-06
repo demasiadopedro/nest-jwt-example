@@ -4,16 +4,18 @@ import { UserService } from 'src/user/user.service';
 import {randomBytes, scrypt as _scrypt} from 'crypto';
 import { promisify } from 'util';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 const scrypt = promisify(_scrypt);
 
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly userService: UserService
+        private readonly userService: UserService,
+        private readonly jwtService: JwtService
         
     ) {}
-    async signUp(email: string, password: string): Promise<string> {
+    async signUp(email: string, password: string):Promise<string> {
         
         const existingUser: User | null = await this.userService.buscarUserPorEmail(email);
 
@@ -37,7 +39,7 @@ export class AuthService {
         return 'Usuario criado com sucesso';
     }
 
-    async signIn(email: string, password: string): Promise<string> {
+    async signIn(email: string, password: string) {
         const user = await this.userService.buscarUserPorEmail(email);
         if (!user) {
             throw new BadRequestException('Email ou senha incorretos');
@@ -49,6 +51,7 @@ export class AuthService {
             throw new BadRequestException('Email ou senha incorretos');
         }
         console.log('Usuario logado com sucesso');
-        return user.email;
+        const payload = { sub: user.id, email: user.email };
+        return {acess_token: this.jwtService.sign(payload)};
     }
 }
