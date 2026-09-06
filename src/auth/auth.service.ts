@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import {randomBytes, scrypt as _scrypt} from 'crypto';
@@ -35,5 +35,20 @@ export class AuthService {
 
 
         return 'Usuario criado com sucesso';
+    }
+
+    async signIn(email: string, password: string): Promise<string> {
+        const user = await this.userService.buscarUserPorEmail(email);
+        if (!user) {
+            throw new BadRequestException('Email ou senha incorretos');
+        }
+        const [salt, storedHash] = user?.password.split('.');
+
+        const hash: Buffer = await scrypt(password, salt, 32) as Buffer;
+        if (storedHash !== hash.toString('hex')) {
+            throw new BadRequestException('Email ou senha incorretos');
+        }
+        console.log('Usuario logado com sucesso');
+        return user.email;
     }
 }
